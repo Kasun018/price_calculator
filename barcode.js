@@ -33,7 +33,7 @@ let scanCooldown = false;
 async function testBackendConnection() {
     for (const url of backendUrls) {
         try {
-            const response = await fetch(url + "?barcode=test");
+            const response = await fetch(url + "?barcode=8901234567890");
             if (response.ok) {
                 currentBackendUrl = url;
                 console.log("✅ Backend connected:", url);
@@ -81,7 +81,11 @@ function updateTotals() {
 // ===== Quantity & Remove Handlers =====
 window.updateQty = function(index, val) {
     const qty = parseInt(val) || 1;
-    items[index].qty = qty;
+    if (qty < 1) {
+        items[index].qty = 1;
+    } else {
+        items[index].qty = qty;
+    }
     renderTable();
 };
 
@@ -92,6 +96,7 @@ window.removeItem = function(index) {
 
 // ===== Reset Bill =====
 function resetBill() {
+    if (items.length > 0 && !confirm("Reset all items?")) return;
     items = [];
     discountInput.value = 0;
     renderTable();
@@ -135,6 +140,11 @@ function saveAsPDF() {
 async function startCamera() {
     if (streamActive) return;
     try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            flashMessage("Camera access not supported in this browser", "error");
+            return;
+        }
+        
         codeReader = new ZXing.BrowserMultiFormatReader();
         await codeReader.reset();
         streamActive = true;
@@ -163,6 +173,7 @@ function stopCamera() {
     if (!streamActive) return;
     try {
         if (codeReader) codeReader.reset();
+        video.srcObject = null;
     } catch (e) { console.error(e); }
     streamActive = false;
 }
@@ -184,29 +195,33 @@ async function fetchPriceAndAdd(barcode) {
             return;
         }
 
-        const text = await res.text();
-        let json;
-        try { json = JSON.parse(text); } 
-        catch (e) {
-            flashMessage("Backend returned invalid JSON", "error");
-            console.error(text);
-            return;
-        }
+        const data = await res.json();
 
-        if (json.error) {
+        if (data.error) {
             flashMessage("Product not found: " + barcode, "error");
             return;
         }
 
-        const price = parseFloat(json.price);
+        const price = parseFloat(data.price);
         if (isNaN(price)) {
             flashMessage("Invalid price data", "error");
             return;
         }
 
-        items.push({ price, qty: 1, name: json.product_name || barcode });
+        const existingItem = items.find(item => item.name === data.product_name);
+        if (existingItem) {
+            existingItem.qty++;
+        } else {
+            items.push({ 
+                price, 
+                qty: 1, 
+                name: data.product_name || barcode,
+                barcode: barcode 
+            });
+        }
+        
         renderTable();
-        flashMessage(`Added: ${json.product_name || "Item"}`, "success");
+        flashMessage(`Added: ${data.product_name || "Item"}`, "success");
 
     } catch (err) {
         console.error(err);
@@ -223,7 +238,8 @@ function flashMessage(msg, type = "info") {
     el.style.transform = "translateX(-50%)";
     el.style.bottom = "20px";
     el.style.padding = "12px 18px";
-    el.style.background = type === "error" ? "rgba(192,57,43,0.9)" : "rgba(43,138,62,0.9)";
+    el.style.background = type === "error" ? "rgba(192,57,43,0.9)" : 
+                         type === "success" ? "rgba(43,138,62,0.9)" : "rgba(52,152,219,0.9)";
     el.style.color = "#fff";
     el.style.borderRadius = "8px";
     el.style.zIndex = "9999";

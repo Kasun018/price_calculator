@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Billing System - Price Calculator</title>
+
+  <!-- ZXing for barcode scanning -->
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+
+  <!-- jsPDF for PDF generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <link rel="stylesheet" href="barcode.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🧾 Simple Billing System</h1>
+
+    <div class="scanner">
+      <video id="video" autoplay playsinline></video>
+      <div class="scanner-controls">
+        <button id="startBtn">Start Camera</button>
+        <button id="stopBtn">Stop Camera</button>
+        <button id="manualBtn">Manual Barcode</button>
+      </div>
+    </div>
+
+    <div class="settings">
+      <label>Discount (LKR):
+        <input id="discount" type="number" min="0" step="0.01" value="0">
+      </label>
+    </div>
+
+    <div class="bill">
+      <table id="billTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th>Price (LKR)</th>
+            <th>Qty</th>
+            <th>Total</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="totals">
+        <div>Subtotal: <span id="subtotal">0.00</span> LKR</div>
+        <div>Discount: <span id="discountValue">0.00</span> LKR</div>
+        <div class="grand">Grand Total: <span id="grandTotal">0.00</span> LKR</div>
+      </div>
+
+      <div class="actions">
+        <button id="resetBtn" class="btn reset">Reset</button>
+        <button id="saveBtn" class="btn save">Save as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="barcode.js"></script>
+</body>
+</html>

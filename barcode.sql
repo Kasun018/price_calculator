@@ -1,0 +1,19 @@
+CREATE DATABASE IF NOT EXISTS shop;
+USE shop;
+
+CREATE TABLE IF NOT EXISTS products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  barcode VARCHAR(128) NOT NULL UNIQUE,
+  product_name VARCHAR(255),
+  price DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Sample products
+INSERT INTO products (barcode, product_name, price) VALUES
+('8901234567890','Soap 75g', 120.00),
+('4791234001122','Milk 1L', 250.00),
+('9801234500011','Biscuit Pack', 85.50),
+('1234567890123','Rice 5kg', 450.00),
+('9876543210987','Tea Packet', 95.00)
+ON DUPLICATE KEY UPDATE price=VALUES(price);
